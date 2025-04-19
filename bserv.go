@@ -27,6 +27,7 @@ import (
 	"os"
 	"os/signal"
 	"path"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
@@ -129,27 +130,29 @@ func wrapHandler(rootDir string) http.Handler {
 
 func serveRequests(rootDir string, listenOn string) {
 	http.Handle("/up", wrapHandler(rootDir))
+	log.Printf("Serving on '%s' in '%s'.", listenOn, rootDir)
 	if err := http.ListenAndServe(listenOn, nil); err != nil {
 		log.Fatalf("Unable to listen requests, error '%v'.", err)
 	}
 }
 
 func parseArgs() (string, string) {
-	curDir, err := os.Getwd()
-	if err != nil {
-		log.Fatalf("Unable to get current directory, error '%v'.", err)
-	}
-	var rootDir string
 	var listenOn string
-	flag.StringVar(&rootDir, "root-dir", curDir, "Root directory path")
-	flag.StringVar(&listenOn, "listen-on", "0.0.0.0:2180", "Listen on address")
+	flag.StringVar(&listenOn, "listen-on", ":2180", "Listen on address")
 	flag.Parse()
+	if flag.NArg() != 1 {
+		log.Fatalf("Usage: bserv <root-dir>")
+	}
+	rootDir, resolveErr := filepath.Abs(flag.Arg(0))
+	if resolveErr != nil {
+		log.Fatalf("Unable to resolve absolute path from '%s', error '%v'.", flag.Arg(0), resolveErr)
+	}
 	return rootDir, listenOn
 }
 
 func main() {
-	rootDir, listenOn := parseArgs()
 	log.SetFlags(0)
+	rootDir, listenOn := parseArgs()
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 	go serveRequests(rootDir, listenOn)
