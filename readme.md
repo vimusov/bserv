@@ -21,8 +21,9 @@ Go >= 1.16.
 Server arguments:
 
 ```
--listen-on <IP:PORT> - Listen on the IP and PORT (0.0.0.0:2180 by default);
--root-dir <PATH> - Path to the root directory (current directory by default);
+bserv [-listen-on <IP:PORT>] <DIR>
+-listen-on <IP:PORT> - Listen on the IP and PORT (:2180 by default);
+<DIR> - Path to the root directory;
 ```
 
 Uploading file:
